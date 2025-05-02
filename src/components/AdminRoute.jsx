@@ -1,7 +1,7 @@
 // movie-database/src/components/AdminRoute.jsx
 import React, { useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AuthContext } from '../context/authcontext';
+import AuthContext from '../context/authContext';
 
 const AdminRoute = ({ children }) => {
   const { userProfile } = useContext(AuthContext);
