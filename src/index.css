@@ -1,0 +1,11 @@
+/* movie-database/src/index.css */
+/* stylelint-disable at-rule-no-unknown */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Estilo global para body (si deseas forzar el fondo gris oscuro) */
+body {
+  background-color: #1f2937; /* bg-gray-800 o un tono similar */
+}
