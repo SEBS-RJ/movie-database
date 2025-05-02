@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useContext } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import MovieList from '../components/Movies/MovieList';
 import Loader from '../components/UI/Loader';
-import AuthContext from '../../context/authContext';
+import AuthContext from '../context/authContext';
 import RecommendedMovies from '../components/Movies/RecommendedMovies';
 
 const genres = [

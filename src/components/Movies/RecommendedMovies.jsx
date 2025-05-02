@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Loader from '../UI/Loader';
-import { AuthContext } from '../../context/authContext';
+import AuthContext from '../context/authContext';
 import { Link } from 'react-router-dom';
 
 const RecommendedMovies = () => {

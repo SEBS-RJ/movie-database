@@ -1,7 +1,7 @@
 // movie-database/src/components/Reviews/ReviewForm.jsx
 import React, { useState, useContext } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import AuthContext from '../../context/authContext';
+import AuthContext from '../context/authContext';
 import Button from '../UI/Button';
 import StarRating from '../UI/StarRating';
 
