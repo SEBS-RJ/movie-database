@@ -1,7 +1,7 @@
 // movie-database/src/components/Layout/Header.jsx
 import React, { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import AuthContext from '../context/authContext';
+import AuthContext from '../../context/authContext';
 import { supabase } from '../../lib/supabaseClient';
 import NotificationBell from '../Notifications/NotificationBell';
 
