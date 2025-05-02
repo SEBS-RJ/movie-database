@@ -1,6 +1,6 @@
 // movie-database/src/context/AuthProvider.jsx
 import React, { useState, useEffect } from 'react';
-import AuthContext from './authcontext';
+import AuthContext from './authContext';
 import { supabase } from '../lib/supabaseClient';
 
 const AuthProvider = ({ children }) => {
