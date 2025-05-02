@@ -3,7 +3,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Loader from '../UI/Loader';
 import Button from '../UI/Button';
-import AuthContext from '../context/authContext';
+import AuthContext from '../../context/authContext';
 
 const ReviewReplies = ({ reviewId }) => {
   const { user } = useContext(AuthContext);
