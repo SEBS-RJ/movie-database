@@ -3,7 +3,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Loader from '../components/UI/Loader';
 import MovieCard from '../components/Movies/MovieCard';
-import { AuthContext } from '../context/authContext';
+import AuthContext from '../../context/authContext';
 
 const FavoritesPage = () => {
   const { user } = useContext(AuthContext);

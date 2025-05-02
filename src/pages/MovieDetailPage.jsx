@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import MovieDetails from '../components/Movies/MovieDetails';
 import Loader from '../components/UI/Loader';
 import { supabase } from '../lib/supabaseClient';
-import { AuthContext } from '../context/authcontext';
+import AuthContext from '../../context/authContext';
 
 const MovieDetailPage = () => {
   const { id: movieId } = useParams();

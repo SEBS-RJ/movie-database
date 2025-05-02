@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import Loader from '../components/UI/Loader';
-import { AuthContext } from '../context/authcontext';
+import AuthContext from '../../context/authContext';
 
 const ProfilePage = () => {
   const { user } = useContext(AuthContext);
