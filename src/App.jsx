@@ -15,6 +15,7 @@ import AdminRoute from './components/AdminRoute'; // Importa el componente de ru
 const App = () => {
   return (
     <Router>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
       <Layout>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -34,6 +35,7 @@ const App = () => {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Layout>
+      </div>
     </Router>
   );
 };

@@ -138,7 +138,7 @@ const RecommendedMovies = ({ excludeMovieId }) => {
           }
         `}</style>
         {movies.map((movie) => (
-          <MovieItem key={movie.id} movie={movie} />
+          <MovieItem key={movie.id} movie={movie} className = "inline-block w-64 md:w-72 lg:w-80"/>
         ))}
       </div>
 
