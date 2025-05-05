@@ -1,13 +1,19 @@
-/** @type {import('tailwindcss').Config} */
-export default {
+// tailwind.config.js
+/* eslint-disable */
+module.exports = {
   content: [
     "./index.html",
-    "./src/**/*.{js,jsx,ts,tsx}"
+    "./src/**/*.{js,jsx,ts,tsx}", // Ruta a todos los archivos dentro de src/
   ],
   theme: {
-    extend: {},
+    extend: {
+      // Tus extensiones de tema, por ejemplo, colores personalizados
+      colors: {
+        'imdb-yellow': '#F5C518'
+      },
+    },
   },
-  plugins: [],
+  plugins: [    
+    require('@tailwindcss/aspect-ratio'),   // Plugin para relaciones de aspecto
+  ],
 };
-
-

@@ -7,7 +7,7 @@ import StarRating from '../UI/StarRating';
 
 const ReviewForm = ({ movieId, onReviewAdded }) => {
   const { user } = useContext(AuthContext);
-  const [rating, setRating] = useState(0); // valor entre 0 y 10
+  const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');

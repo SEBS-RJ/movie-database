@@ -9,21 +9,34 @@ const FavoritesPage = () => {
   const { user } = useContext(AuthContext);
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Un contador para forzar la actualización de favoritos
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
+  // Función para consultar favoritos
+  const fetchFavorites = async () => {
+    setLoading(true);
     if (user) {
-      const fetchFavorites = async () => {
-        const { data, error } = await supabase
-          .from('user_favorites')
-          .select('movie:movie_id(*)')
-          .eq('user_id', user.id);
-        if (error) console.error('Error al obtener favoritos:', error);
-        else setFavorites(data.map(item => item.movie));
-        setLoading(false);
-      };
-      fetchFavorites();
+      const { data, error } = await supabase
+        .from('user_favorites')
+        .select('movie:movie_id(*)')
+        .eq('user_id', user.id);
+      if (error) console.error('Error al obtener favoritos:', error);
+      else setFavorites(data.map(item => item.movie));
     }
-  }, [user]);
+    setLoading(false);
+  };
+
+  // Se ejecuta la consulta cuando el usuario cambia o cuando refreshKey cambia.
+  useEffect(() => {
+    fetchFavorites();
+  }, [user, refreshKey]);
+
+  // Callback que se invoca cuando se quita un favorito en MovieCard
+  const handleFavoriteToggle = () => {
+    // Incrementamos el refreshKey para reejecutar el useEffect y actualizar la lista.
+    setRefreshKey(prev => prev + 1);
+  };
 
   if (loading) return <Loader />;
 
@@ -33,7 +46,12 @@ const FavoritesPage = () => {
       {favorites.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {favorites.map(movie => (
-            <MovieCard key={movie.id} movie={movie} user={user} />
+            <MovieCard 
+              key={movie.id} 
+              movie={movie} 
+              user={user} 
+              onFavoriteToggle={handleFavoriteToggle} // Se pasa el callback
+            />
           ))}
         </div>
       ) : (

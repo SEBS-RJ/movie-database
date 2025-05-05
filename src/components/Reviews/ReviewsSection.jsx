@@ -4,6 +4,7 @@ import ReviewForm from './ReviewForm';
 import ReviewList from './ReviewList';
 import ReviewStats from './ReviewStats';
 
+
 const ReviewsSection = ({ movieId }) => {
   // Usamos refresh para forzar recargar la lista tras agregar una reseña
   const [refresh, setRefresh] = useState(false);

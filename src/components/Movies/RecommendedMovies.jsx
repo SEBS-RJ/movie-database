@@ -1,112 +1,155 @@
 // movie-database/src/components/Movies/RecommendedMovies.jsx
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import Loader from '../UI/Loader';
-import AuthContext from '../../context/authContext';
-import { Link } from 'react-router-dom';
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import MovieItem from './MovieItem';
 
-const RecommendedMovies = () => {
-  const { user } = useContext(AuthContext);
-  const [recommended, setRecommended] = useState([]);
+const RecommendedMovies = ({ excludeMovieId }) => {
+  const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(false);
+  // Estados para flechas de navegación y scroll
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const carouselRef = useRef(null);
+
+  const threshold = 20;
+  const epsilon = 20;
+
+  // Función de shuffle usando el algoritmo de Fisher–Yates
+  const shuffleArray = (array) => {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  };
 
   const fetchRecommendedMovies = async () => {
-    if (!user) return;
-
     setLoading(true);
-
-    // Obtener favoritos del usuario (suponiendo que tienes una tabla "favorites" con columnas: user_id, movie_id)
-    const { data: favorites, error: favError } = await supabase
-      .from('favorites')
-      .select('movie_id')
-      .eq('user_id', user.id);
-    if (favError) {
-      console.error('Error al obtener favoritos:', favError);
-      setLoading(false);
-      return;
-    }
-
-    // Si no tiene favoritos, se muestra un fallback con películas populares por rating
-    if (!favorites || favorites.length === 0) {
-      const { data: popularMovies, error: popError } = await supabase
+    try {
+      // Consulta: obtiene películas ordenadas por rating descendente
+      let query = supabase
         .from('movies')
         .select('*')
-        .order('rating', { ascending: false })
-        .limit(6);
-      if (popError) {
-        console.error('Error al obtener películas populares:', popError);
-      } else {
-        setRecommended(popularMovies);
+        .order('rating', { ascending: false });
+      if (excludeMovieId) {
+        query = query.neq('id', excludeMovieId);
       }
-      setLoading(false);
-      return;
-    }
-
-    // Extraer los IDs de las películas favoritas
-    const favoriteIds = favorites.map(fav => fav.movie_id);
-
-    // Obtener los géneros de las películas favoritas
-    const { data: favoriteMovies, error: favMoviesError } = await supabase
-      .from('movies')
-      .select('genre')
-      .in('id', favoriteIds);
-    if (favMoviesError) {
-      console.error('Error al obtener películas favoritas:', favMoviesError);
-      setLoading(false);
-      return;
-    }
-
-    // Generar un array único de géneros a partir de las películas favoritas
-    let recommendedGenres = [];
-    favoriteMovies.forEach(movie => {
-      if (movie.genre && Array.isArray(movie.genre)) {
-        movie.genre.forEach(g => {
-          if (!recommendedGenres.includes(g)) {
-            recommendedGenres.push(g);
-          }
-        });
+      query = query.limit(21);
+      const { data, error } = await query;
+      if (error) {
+        console.error("Error fetching recommended movies:", error);
+        setMovies([]);
+      } else if (data) {
+        // Mezcla el listado para obtener un orden aleatorio
+        const shuffled = shuffleArray(data);
+        setMovies(shuffled);
       }
-    });
-
-    // Consultar películas que compartan alguno de esos géneros y excluir las ya favoritas
-    const { data: recMovies, error: recError } = await supabase
-      .from('movies')
-      .select('*')
-      .overlap('genre', recommendedGenres)
-      .not('id', 'in', `(${favoriteIds.join(',')})`)
-      .order('rating', { ascending: false })
-      .limit(6);
-    if (recError) {
-      console.error('Error al obtener recomendaciones:', recError);
-    } else {
-      setRecommended(recMovies);
+    } catch (err) {
+      console.error("Error in fetchRecommendedMovies:", err);
+      setMovies([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
     fetchRecommendedMovies();
-  }, [user]);
+  }, [excludeMovieId]);
+
+  // Función que actualiza la visibilidad de las flechas del carrusel
+  const updateArrowVisibility = () => {
+    if (carouselRef.current) {
+      const { scrollLeft, clientWidth, scrollWidth } = carouselRef.current;
+      setShowLeftArrow(scrollLeft > threshold);
+      setShowRightArrow(scrollLeft + clientWidth < scrollWidth - threshold);
+    }
+  };
+
+  useEffect(() => {
+    updateArrowVisibility();
+    const carousel = carouselRef.current;
+    if (carousel) {
+      carousel.addEventListener('scroll', updateArrowVisibility);
+      return () => carousel.removeEventListener('scroll', updateArrowVisibility);
+    }
+  }, [movies]);
+
+  const scrollLeftFunc = () => {
+    if (carouselRef.current && !isScrolling) {
+      setIsScrolling(true);
+      const { scrollLeft, clientWidth } = carouselRef.current;
+      let target = scrollLeft - clientWidth;
+      if (target < 0) target = 0;
+      carouselRef.current.scrollTo({ left: target, behavior: 'smooth' });
+      setTimeout(() => setIsScrolling(false), 600);
+    }
+  };
+
+  const scrollRightFunc = () => {
+    if (carouselRef.current && !isScrolling) {
+      setIsScrolling(true);
+      const { scrollLeft, clientWidth, scrollWidth } = carouselRef.current;
+      const remaining = scrollWidth - (scrollLeft + clientWidth);
+      let target = scrollLeft + clientWidth;
+      if (remaining <= epsilon) {
+        target = scrollWidth - clientWidth;
+      }
+      if (target > scrollWidth - clientWidth) target = scrollWidth - clientWidth;
+      carouselRef.current.scrollTo({ left: target, behavior: 'smooth' });
+      setTimeout(() => setIsScrolling(false), 600);
+    }
+  };
 
   if (loading) return <Loader />;
+  if (!movies || movies.length === 0)
+    return <p className="text-gray-400 mt-4">No se encontraron películas recomendadas.</p>;
 
   return (
-    <div className="recommended-movies mt-8">
-      <h3 className="text-2xl font-bold mb-4">Películas que te pueden gustar</h3>
-      {recommended && recommended.length > 0 ? (
-        <div className="flex space-x-4 overflow-x-auto pb-2">
-          {recommended.map(movie => (
-            <Link key={movie.id} to={`/movies/${movie.id}`}>
-              <img
-                src={movie.poster_url}
-                alt={movie.title}
-                className="w-32 h-auto rounded hover:opacity-75 transition"
-              />
-            </Link>
-          ))}
-        </div>
-      ) : (
-        <p className="text-gray-400">No se encontraron recomendaciones.</p>
+    <div className="recommended-movies mt-8 relative">
+      <h3 className="text-2xl font-bold mb-4">Películas Recomendadas</h3>
+
+      {/* Flecha izquierda */}
+      {showLeftArrow && (
+        <button
+          onClick={scrollLeftFunc}
+          className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-gray-800 text-yellow-300 p-2 rounded-full hover:bg-gray-700"
+        >
+          <FaChevronLeft size={20} />
+        </button>
+      )}
+
+      {/* Carrusel */}
+      <div
+        ref={carouselRef}
+        className="overflow-x-auto whitespace-nowrap scroll-smooth px-4"
+        style={{
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          scrollSnapType: 'x mandatory'
+        }}
+      >
+        <style>{`
+          .recommended-movies::-webkit-scrollbar {
+            display: none;
+          }
+        `}</style>
+        {movies.map((movie) => (
+          <MovieItem key={movie.id} movie={movie} />
+        ))}
+      </div>
+
+      {/* Flecha derecha */}
+      {showRightArrow && (
+        <button
+          onClick={scrollRightFunc}
+          className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-gray-800 text-yellow-300 p-2 rounded-full hover:bg-gray-700"
+        >
+          <FaChevronRight size={20} />
+        </button>
       )}
     </div>
   );

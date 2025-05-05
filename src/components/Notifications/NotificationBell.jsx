@@ -31,13 +31,16 @@ const NotificationBell = () => {
     };
   }, []);
 
-  const toggleDropdown = () => {
+  const toggleDropdown = (e) => {
+    // Se evita cualquier acción por defecto
+    if (e) e.preventDefault();
     setIsOpen((prev) => !prev);
   };
 
   return (
     <div className="relative">
-      <button onClick={toggleDropdown} className="relative p-2">
+      {/* Es importante especificar type="button" para evitar redireccionamientos inesperados */}
+      <button type="button" onClick={toggleDropdown} className="relative p-2">
         <svg
           className="w-6 h-6 text-yellow-300"
           fill="none"
@@ -60,26 +63,26 @@ const NotificationBell = () => {
           </span>
         )}
       </button>
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-white text-black rounded-md shadow-lg z-50">
-          <div className="p-2">
-            <h4 className="font-bold mb-2">Notificaciones</h4>
-            {notifications.length > 0 ? (
-              notifications.map((notification, index) => (
-                <div key={index} className="mb-1">
-                  {notification.type === 'new_movie' && (
-                    <span>
-                      Nueva película: <strong>{notification.data.title}</strong>
-                    </span>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div>No hay notificaciones.</div>
-            )}
+        {isOpen && (
+          <div className="absolute right-0 mt-2 w-64 bg-white text-black rounded-md shadow-lg z-[9999]">
+            <div className="p-2">
+              <h4 className="font-bold mb-2">Notificaciones</h4>
+              {notifications.length > 0 ? (
+                notifications.map((notification, index) => (
+                  <div key={index} className="mb-1">
+                    {notification.type === 'new_movie' && (
+                      <span>
+                        Nueva película: <strong>{notification.data.title}</strong>
+                      </span>
+                    )}
+                  </div>
+                ))
+                ) : (
+                <div>No hay notificaciones.</div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 };

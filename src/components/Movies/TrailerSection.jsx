@@ -1,16 +1,16 @@
-// movie-database/src/components/Movies/TrailerSection.jsx
 import React, { useState } from 'react';
+import { FaPlay } from 'react-icons/fa';
 
-// Función para extraer el ID de YouTube a partir de la URL.
+// Función para extraer el ID de YouTube desde una URL.
 const extractYouTubeID = (url) => {
-  const regExp = new RegExp('^.*(youtu\\.be\\/|v\\/|u\\/\\w\\/|embed\\/|watch\\?v=|&v=)([^#&?]*).*');
-  const match = url.match(regExp);
-  return (match && match[2].length === 11) ? match[2] : null;
+  const regex = /^(?:.*(?:youtu\.be\/|v\/|u\/\w+\/|embed\/|watch\?v=|&v=))([^#&?]+).*/;
+  const match = url.match(regex);
+  return (match && match[1].length === 11) ? match[1] : null;
 };
 
 const TrailerSection = ({ trailerUrl }) => {
   const videoId = trailerUrl ? extractYouTubeID(trailerUrl) : null;
-  const [showTrailer, setShowTrailer] = useState(false);
+  const [playVideo, setPlayVideo] = useState(false);
 
   if (!videoId) return null;
 
@@ -18,39 +18,34 @@ const TrailerSection = ({ trailerUrl }) => {
   const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 
   return (
-    <div className="trailer-section mt-6">
-      {!showTrailer ? (
-        // En modo preview, eliminamos las clases que limitaban el ancho (como md:w-1/2)
+    <div className="relative w-full mb-4" 
+    style={{ paddingBottom: '60%' }}
+    >
+      {!playVideo ? (
         <div 
-          className="cursor-pointer relative w-full" 
-          onClick={() => setShowTrailer(true)}
+          className="absolute inset-0 cursor-pointer" 
+          onClick={() => setPlayVideo(true)}
         >
           <img 
             src={thumbnailUrl} 
             alt="Miniatura del tráiler" 
-            className="w-full object-cover rounded"
+            className="absolute inset-0 w-full h-full object-cover rounded-lg" 
           />
           <div className="absolute inset-0 flex items-center justify-center">
-            <button className="px-4 py-2 bg-yellow-300 text-gray-900 rounded">
-              Ver Tráiler
+            <button className="bg-black bg-opacity-60 p-4 rounded-full shadow-lg flex items-center justify-center">
+              <FaPlay className="text-yellow-300 text-3xl" />
             </button>
           </div>
         </div>
       ) : (
-        // En modo reproducción, se utiliza el contenedor padre para definir el ancho.
-        <div className="relative w-full">
-          {/* El contenedor "aspect-video" mantiene la relación de aspecto 16:9 */}
-          <div className="aspect-video overflow-hidden rounded shadow-lg">
-            <iframe
-              title="Trailer"
-              className="absolute top-0 left-0 w-full h-full"
-              src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
-              frameBorder="0"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            ></iframe>
-          </div>
-        </div>
+        <iframe
+          title="Tráiler"
+          className="absolute inset-0 w-full h-full rounded-lg shadow-lg"
+          src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        ></iframe>
       )}
     </div>
   );

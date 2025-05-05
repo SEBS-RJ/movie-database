@@ -5,78 +5,52 @@ import MovieList from '../components/Movies/MovieList';
 import Loader from '../components/UI/Loader';
 import AuthContext from '../context/authContext';
 import RecommendedMovies from '../components/Movies/RecommendedMovies';
-
-const genres = [
-  'Todos',
-  'Acción',
-  'Aventura',
-  'Animación',
-  'Artes Marciales',
-  'Biografía',
-  'Ciencia Ficción',
-  'Comedia',
-  'Crimen',
-  'Documental',
-  'Drama',
-  'Fantasía',
-  'Guerra',
-  'Misterio',
-  'Música',
-  'Musical',
-  'Romance',
-  'Suspenso',
-  'Terror',
-  'Thriller',
-  'Western',
-];
+/* eslint-disable-next-line no-unused-vars */
+import { motion } from 'framer-motion';
+import CategoryFilter from '../components/Movies/CategoryFilter';
+import OrderFilter from '../components/Movies/OrderFilter';
 
 const HomePage = () => {
   const { user } = useContext(AuthContext);
 
-  // Estados para la lista de películas, paginación y carga
+  // Estados para películas y paginación
   const [movies, setMovies] = useState([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [totalMovies, setTotalMovies] = useState(0);
+  const limit = 20; // Películas por página
 
-  // Estados inmediatos de filtros (controlados por el usuario)
-  const [searchTerm, setSearchTerm] = useState('');
+  // Estados para filtros
   const [genreFilter, setGenreFilter] = useState('Todos');
   const [order, setOrder] = useState('title_asc');
 
   // Objeto de filtros debounced
   const [filterParams, setFilterParams] = useState({
-    search: '',
     genre: 'Todos',
     order: 'title_asc'
   });
 
   const debounceTimeout = useRef();
-  const limit = 24; // Películas por página
 
-  // Efecto para actualizar (debounced) los filtros y reiniciar la paginación
+  // Efecto debounce para actualizar filtros y reiniciar la paginación
   useEffect(() => {
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
     debounceTimeout.current = setTimeout(() => {
       setFilterParams({
-        search: searchTerm,
         genre: genreFilter,
         order: order
       });
       setPage(1);
     }, 300);
     return () => clearTimeout(debounceTimeout.current);
-  }, [searchTerm, genreFilter, order]);
+  }, [genreFilter, order]);
 
-  // Efecto para obtener las películas
+  // Efecto para obtener películas según los filtros
   useEffect(() => {
     const fetchMovies = async () => {
       setLoading(true);
 
       let query = supabase.from('movies').select('*', { count: 'exact' });
-      if (filterParams.search) {
-        query = query.ilike('title', `%${filterParams.search}%`);
-      }
       if (filterParams.genre !== 'Todos') {
         query = query.contains('genre', [filterParams.genre]);
       }
@@ -108,49 +82,38 @@ const HomePage = () => {
   const totalPages = Math.ceil(totalMovies / limit);
 
   return (
-    <div className="home-page">
-      <h2 className="text-3xl font-bold mb-4">Películas</h2>
-      <div className="flex flex-col sm:flex-row gap-4 mb-4">
-        <input
-          type="text"
-          placeholder="Buscar por título"
-          className="p-2 rounded bg-gray-900 text-yellow-300 border border-gray-700 flex-grow"
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
+    <div className="home-page relative container mx-auto p-8 bg-gradient-to-b from-gray-900 to-gray-900 rounded-xl shadow-2xl">
+      
+      {/* Contenedor de filtros en la esquina superior derecha */}
+      <div className="absolute top-4 right-4 z-50 flex flex-col sm:flex-row gap-2">
+        <CategoryFilter 
+          selectedCategory={genreFilter === 'Todos' ? '' : genreFilter}
+          onCategorySelect={(value) => setGenreFilter(value ? value : 'Todos')}
         />
-        <select
-          value={genreFilter}
-          onChange={e => setGenreFilter(e.target.value)}
-          className="p-1 rounded bg-gray-900 text-yellow-300 border border-gray-700"
-        >
-          {genres.map(g => (
-            <option key={g} value={g}>{g}</option>
-          ))}
-        </select>
-        <select
-          value={order}
-          onChange={e => setOrder(e.target.value)}
-          className="p-1 rounded bg-gray-900 text-yellow-300 border border-gray-700"
-        >
-          <option value="title_asc">Título ↑</option>
-          <option value="title_desc">Título ↓</option>
-          <option value="year_asc">Año ↑</option>
-          <option value="year_desc">Año ↓</option>
-          <option value="rating_asc">Rating ↑</option>
-          <option value="rating_desc">Rating ↓</option>
-        </select>
+        <OrderFilter 
+          selectedOrder={order}
+          onOrderSelect={(value) => setOrder(value)}
+        />
       </div>
-      {loading ? <Loader /> : <MovieList movies={movies} user={user} />}
+
+      <h2 className="text-3xl font-bold mb-4">Películas</h2>
+      
+      {loading ? (
+        <Loader />
+      ) : (
+        <MovieList movies={movies} user={user} />
+      )}
       {!loading && movies.length === 0 && (
         <p className="text-gray-400">No se encontraron películas que cumplan con los filtros.</p>
       )}
+      
       {totalPages > 1 && (
         <div className="pagination flex space-x-2 mt-4 justify-center">
           {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
             <button
               key={pageNum}
               onClick={() => setPage(pageNum)}
-              className={`px-3 py-1 border rounded transition-colors ${
+              className={`px-3 py-1 border rounded-full transition-colors ${
                 page === pageNum ? 'bg-yellow-300 text-gray-900' : 'bg-gray-800 text-yellow-300 hover:bg-gray-700'
               }`}
             >
@@ -160,7 +123,6 @@ const HomePage = () => {
         </div>
       )}
 
-      {/* Aquí se integra la sección de recomendaciones */}
       <RecommendedMovies />
     </div>
   );

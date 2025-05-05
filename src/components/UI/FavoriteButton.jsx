@@ -1,76 +1,72 @@
 // movie-database/src/components/UI/FavoriteButton.jsx
 import React, { useState, useEffect } from 'react';
+import { FaHeart, FaRegHeart } from 'react-icons/fa';
 import { supabase } from '../../lib/supabaseClient';
 
-const FavoriteButton = ({ movieId, userId }) => {
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [loading, setLoading] = useState(false);
+const FavoriteButton = ({ movieId, userId, onToggleFavorite }) => {
+  const [favorited, setFavorited] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!userId || !movieId) return;
     const fetchFavoriteStatus = async () => {
       const { data, error } = await supabase
         .from('user_favorites')
         .select('*')
-        .eq('user_id', userId)
-        .eq('movie_id', movieId)
+        .match({ movie_id: movieId, user_id: userId })
         .single();
-
-      if (data) {
-        setIsFavorite(true);
+      
+      if (error) {
+        // Si no encuentra registro, se interpreta como no favorited
+        console.error('Error fetching favorite status:', error);
+        setFavorited(false);
+      } else if (data) {
+        setFavorited(true);
       } else {
-        setIsFavorite(false);
+        setFavorited(false);
       }
-      if (error && error.code !== 'PGRST116') {
-        console.error("Error consultando el estado de favorito:", error);
-      }
+      setLoading(false);
     };
 
-    if (userId && movieId) {
-      fetchFavoriteStatus();
-    }
-  }, [movieId, userId]);
+    fetchFavoriteStatus();
+  }, [userId, movieId]);
 
-  const toggleFavorite = async () => {
-    setLoading(true);
-    if (isFavorite) {
+  const toggleFavorite = async (e) => {
+    e.stopPropagation();
+    if (!userId || !movieId) return;
+    if (favorited) {
       const { error } = await supabase
         .from('user_favorites')
         .delete()
-        .eq('user_id', userId)
-        .eq('movie_id', movieId);
-
+        .match({ movie_id: movieId, user_id: userId });
       if (error) {
-        console.error("Error al quitar de favoritos:", error);
+        console.error('Error deleting favorite:', error);
       } else {
-        setIsFavorite(false);
+        setFavorited(false);
+        if (onToggleFavorite) onToggleFavorite(); // Llama el callback para actualizar la lista
       }
     } else {
       const { error } = await supabase
         .from('user_favorites')
-        .insert([{ user_id: userId, movie_id: movieId }]);
-
+        .insert([{ movie_id: movieId, user_id: userId }]);
       if (error) {
-        console.error("Error al agregar a favoritos:", error);
+        console.error('Error inserting favorite:', error);
       } else {
-        setIsFavorite(true);
+        setFavorited(true);
+        if (onToggleFavorite) onToggleFavorite(); // Llama el callback para actualizar la lista
       }
     }
-    setLoading(false);
   };
 
   return (
     <button
-      className={`px-4 py-2 rounded-lg ${
-        isFavorite ? 'bg-red-500' : 'bg-yellow-300'
-      } text-gray-900 hover:opacity-90 transition`}
       onClick={toggleFavorite}
       disabled={loading}
+      className="absolute bottom-4 right-4 text-3xl text-yellow-300 hover:text-yellow-400 transition-colors"
     >
-      {loading ? 'Procesando...' : isFavorite ? 'Quitar' : 'Favorito'}
+      {favorited ? <FaHeart /> : <FaRegHeart />}
     </button>
   );
 };
 
 export default FavoriteButton;
-
-
